@@ -10,10 +10,10 @@
 * **Empresa:** Terminal Automotriz AutoITBA S.A. (Planta industrial radicada en Zárate, Provincia de Buenos Aires)
 * **Horizonte:** 5 años (Año 1 a Año 5, 2026 - 2030)
 * **Portafolio de Productos:**
-  * **Vehículos Livianos:** LB (Entrada de gama / flota urbana) y LP (Premium / alta tecnología y terminaciones).
+  * **Vehículos Livianos:** LB (Entrada de gama / utilitario urbano) y LP (Premium / alta tecnología y terminaciones).
   * **Pick-ups:** PB (Cabina simple básica), PM (Cabina doble media) y PP (Superior / alta motorización y equipamiento).
 * **Herramientas Utilizadas:** Python 3.12, PuLP (Motor CBC Branch & Bound), Pandas, OpenPyXL, Matplotlib, SciPy.
-* **Repositorio de Código Fuente:** [https://github.com/Santim1897/TP1-IO](https://github.com/Santim1897/TP1-IO)
+* **Repositorio Oficial:** [https://github.com/Santim1897/TP1-IO](https://github.com/Santim1897/TP1-IO)
 
 ### Bibliografía de Referencia
 1. Enunciado oficial de la cátedra: *"IO51 - 2026 2C: Plan de producción AutoITBA SA"*.
@@ -26,12 +26,12 @@
 
 ## Resumen Ejecutivo y Cuadro de Respuestas a las Consignas
 
-Se formuló e implementó un modelo de **Programación Lineal Entera Mixta (MILP)** multiperíodo a cinco años para optimizar las operaciones de AutoITBA S.A. El modelo decide de forma simultánea:
-1. Cuántas unidades ensamblar de cada uno de los cinco vehículos cada año.
+Se formuló e implementó un modelo de **Programación Lineal Entera Mixta (MILP)** multiperíodo a cinco años para planificar y optimizar de manera integral las operaciones de AutoITBA S.A. El modelo decide de forma simultánea:
+1. Cuántas unidades ensamblar de cada uno de los cinco vehículos en cada año.
 2. En qué línea y turno de producción fabricar cada unidad.
-3. Qué turnos activar anualmente en cada línea (incurriendo en sus costos fijos y laborales asociados).
+3. Qué turnos activar anualmente en cada línea (incurriendo en sus costos fijos y laborales de activación).
 4. Cuánto inventario de producto terminado almacenar en el playón de un año al siguiente.
-5. Qué volumen de demanda cubrir en el mercado doméstico, en exportaciones y bajo contratos corporativos especiales.
+5. Qué volumen de demanda cubrir en el mercado doméstico, en exportaciones al MERCOSUR y bajo contratos especiales.
 
 ### Cuadro Síntesis de Resultados por Consigna
 
@@ -47,38 +47,190 @@ Se formuló e implementó un modelo de **Programación Lineal Entera Mixta (MILP
 
 ---
 
-## Sección 1: Formulación Formal del Modelo (MILP)
+## Sección 1: Formulación Formal del Modelo de Programación Lineal (MILP)
 
 ### a.i) Supuestos Más Importantes
-1. **Unidad Monetaria Homogénea (USD sin descontar):** El precio de venta de todas las unidades se factura y percibe en dólares estadounidenses (USD). La función objetivo consolida todos los flujos en USD sin aplicar tasa de descuento intertemporal, optimizando el flujo de caja nominal acumulado en 5 años.
-2. **Dinámica Inflacionaria y Conversión Cambiaria:** Los costos operativos de la planta radicada en Zárate (mano de obra, gastos fijos de encendido de línea y componentes nacionales de ensamble) se encuentran denominados en pesos argentinos (ARS). Se indexan anualmente al ritmo de la inflación proyectada acumulada: $	ext{FactorInflación}(t) = (1 + 0,20)^{t-1}$, arrojando los factores: Año 1: $1,0000$; Año 2: $1,2000$; Año 3: $1,4400$; Año 4: $1,7280$; Año 5: $2,0736$. Para convertirlos a dólares en cada año $t$, se divide por el tipo de cambio oficial promedio del escenario evaluado ($TC_t$).
-3. **Flexibilidad y Ratio Técnico de Sustitución en Línea B (Ratio 1,2):** La Línea B posee infraestructura para soportar bastidores reforzados de pick-ups. En régimen de turno mañana puede procesar 30.000 vehículos livianos o 25.000 pick-ups al año. El ratio técnico de absorción de capacidad es $30.000 / 25.000 = 1,20$. Cada pick-up equivale a 1,20 vehículos livianos de capacidad. La restricción permite cualquier mezcla factible de producción.
-4. **Capacidad y Precedencia del Turno Tarde:** La capacidad de ensamble durante el turno tarde es exactamente el **75% del turno mañana** (Línea A: 7.500 livianos/año; Línea B: 18.750 pick-ups o 22.500 livianos/año). No es admisible habilitar el turno tarde de una línea si no se encuentra previamente activo el turno mañana en esa misma línea ($y_{l, t} \le w_{l, t}$).
-5. **Restricción Sindical de Peligrosidad (Operarios Compartidos):** Si al menos una línea enciende el turno tarde, se deben incorporar **5 operarios adicionales** en la sección de detalles finales por razones de peligrosidad. Estos operarios supervisan el proceso de manera conjunta para toda la planta y no se asignan por línea. Su costo se abona una sola vez en el año si $y_A(t) = 1$ o $y_B(t) = 1$.
-6. **Balance de Inventario y Costo de Playón:** El inventario inicial en Año 1 es cero ($I(v, 0) = 0$). Mantener un vehículo terminado en el playón de Zárate de un año al siguiente devenga un costo anual del **25% de su costo variable unitario de fabricación** en dicho período.
-7. **Diferencial de Exportación (+5% MERCOSUR):** Las pick-ups exportadas a Brasil y la región se venden a un precio 5% superior al precio de lista local por flete, seguro y prima regional de origen argentino. Los livianos no poseen demanda de exportación.
 
-### a.ii) Definición Formal de Variables de Decisión
-* $X(v, l, s, t) \ge 0$: Cantidad de vehículos del modelo $v$ ensamblados en la línea $l \in \{A, B\}$, turno $s \in \{M, T\}$, en el año $t \in \{1,\dots,5\}$.
-* $sLoc(v, t) \ge 0$: Unidades vendidas del modelo $v$ en el mercado interno argentino en el año $t$.
-* $sExp(v, t) \ge 0$: Unidades de pick-ups del modelo $v \in \{PB, PM, PP\}$ exportadas al MERCOSUR en el año $t$.
-* $I(v, t) \ge 0$: Cantidad de vehículos del modelo $v$ almacenados en el playón al 31 de diciembre del año $t$ ($I(v, 0) = 0$).
-* $wA(t), wB(t) \in \{0, 1\}$: Vale 1 si la línea A / B opera en Turno Mañana en el año $t$.
-* $yA(t), yB(t) \in \{0, 1\}$: Vale 1 si la línea A / B opera en Turno Tarde en el año $t$.
-* $z(t) \in \{0, 1\}$: Vale 1 si al menos una línea opera el Turno Tarde en el año $t$ (dispara los 5 operarios sindicales).
-
-### a.iii) Función Objetivo (Funcional Z)
-$$\max Z = \sum_{t=1}^5 \left[ 	ext{Ingresos}(t) - rac{	ext{Costos en Pesos}(t)}{TC(t)} ight]$$
-* $	ext{Ingresos}(t) = \sum_{v} sLoc(v, t) \cdot P_{	ext{local}}(v) + \sum_{v \in PU} sExp(v, t) \cdot [P_{	ext{local}}(v) \cdot 1,05] + 	ext{Autonomy}(t) \cdot 27.500$
-* $	ext{Costos en Pesos}(t) = C_{	ext{var}}(t) + C_{	ext{inv}}(t) + C_{	ext{encendido}}(t) + C_{	ext{laboral}}(t)$
-  * $C_{	ext{var}}(t) = \sum X(v, l, s, t) \cdot CV1(v) \cdot (1,20)^{t-1}$
-  * $C_{	ext{inv}}(t) = \sum I(v, t) \cdot [0,25 \cdot CV1(v) \cdot (1,20)^{t-1}]$
-  * $C_{	ext{encendido}}(t) = [500	ext{M} \cdot (wA+yA) + 800	ext{M} \cdot (wB+yB)] \cdot (1,20)^{t-1}$
-  * $C_{	ext{laboral}}(t) = 26	ext{M} \cdot (1,20)^{t-1} \cdot [8 \cdot (wA+yA) + 10 \cdot (wB+yB) + 5 \cdot z]$
+1. **Unidad Monetaria Homogénea (USD sin descontar):**
+   * El precio de venta de todas las unidades se factura y percibe en dólares estadounidenses (USD).
+   * La función objetivo consolida todos los flujos en USD sin aplicar tasa de descuento intertemporal ($WACC$), optimizando el flujo de caja nominal acumulado en 5 años tal como lo plantea el enunciado.
+2. **Dinámica Inflacionaria y Conversión Cambiaria:**
+   * Los costos operativos de la planta en Zárate (mano de obra, gastos fijos de encendido de línea y componentes nacionales de ensamble) se encuentran denominados en pesos argentinos (ARS).
+   * Se indexan anualmente al ritmo de la inflación proyectada acumulada: $	ext{FactorInflación}(t) = (1 + 0,20)^{t-1}$, arrojando los factores: Año 1: $1,0000$; Año 2: $1,2000$; Año 3: $1,4400$; Año 4: $1,7280$; Año 5: $2,0736$.
+   * Para convertirlos a dólares en cada año $t$, se divide por el tipo de cambio oficial promedio del escenario evaluado ($TC_t$).
+3. **Flexibilidad y Ratio Técnico de Sustitución en Línea B (Ratio 1,2):**
+   * La Línea B posee infraestructura para soportar bastidores reforzados de pick-ups. En régimen de turno mañana puede procesar 30.000 vehículos livianos o 25.000 pick-ups al año.
+   * El ratio técnico de absorción de capacidad es $30.000 / 25.000 = 1,20$. Cada pick-up equivale a 1,20 vehículos livianos de capacidad. La restricción permite cualquier mezcla factible de producción.
+4. **Capacidad y Precedencia del Turno Tarde:**
+   * La capacidad de ensamble durante el turno tarde es exactamente el **75% del turno mañana** (Línea A: 7.500 livianos/año; Línea B: 18.750 pick-ups o 22.500 livianos/año).
+   * Por razones de organización operativa y jerarquía de planta, no es admisible habilitar el turno tarde de una línea si no se encuentra previamente activo el turno mañana en esa misma línea ($y_{l, t} \le w_{l, t}$).
+5. **Restricción Sindical de Peligrosidad (Operarios Compartidos):**
+   * Si al menos una línea enciende el turno tarde, se deben incorporar **5 operarios adicionales** en la sección de detalles finales por razones de peligrosidad.
+   * Estos operarios supervisan el proceso de manera conjunta para toda la planta y no se asignan por línea. Su costo se abona una sola vez en el año si $y_A(t) = 1$ o $y_B(t) = 1$.
+6. **Balance de Inventario y Costo de Playón:**
+   * El inventario inicial en Año 1 es cero ($I(v, 0) = 0$). Mantener un vehículo terminado en el playón de Zárate de un año al siguiente devenga un costo anual del **25% de su costo variable unitario de fabricación** en dicho período.
+7. **Diferencial de Exportación (+5% MERCOSUR):**
+   * Las pick-ups exportadas a Brasil y la región se venden a un precio 5% superior al precio de lista local por flete, seguro y prima regional de origen argentino. Los livianos no poseen demanda de exportación.
+8. **Supuestos Generales de Programación Lineal (Clase 02 ITBA):**
+   * *Proporcionalidad:* Se cumple para los costos variables e ingresos. No para los costos fijos de encendido ni salarios base, obligando al uso de binarias (MIP).
+   * *Aditividad:* El costo y absorción total es la suma directa de los costos y consumos individuales.
+   * *Divisibilidad:* Se adopta para las variables físicas de producción y ventas ($x, s$), tratándolas como continuas.
+   * *Certidumbre:* Se trabaja mediante análisis de escenarios y árboles de arrepentimiento Minimax Regret.
 
 ---
 
-## Sección 2: Desarrollo Punto por Punto y Procedimientos Utilizados
+### a.ii) Definición Formal de Variables de Decisión
+
+El modelo formula **135 variables de decisión**: 110 continuas y 25 binarias.
+
+| Variable | Dominio | Cantidad | Descripción y Rol Económico |
+| :--- | :---: | :---: | :--- |
+| $X(v, l, s, t)$ | Real $\ge 0$ | 70 | Cantidad de vehículos del modelo $v$ ensamblados en la línea $l \in \{A, B\}$, turno $s \in \{M, T\}$, en el año $t \in \{1,\dots,5\}$. |
+| $sLoc(v, t)$ | Real $\ge 0$ | 25 | Unidades vendidas del modelo $v$ en el mercado interno argentino durante el año $t$. |
+| $sExp(v, t)$ | Real $\ge 0$ | 15 | Unidades de pick-ups del modelo $v \in \{PB, PM, PP\}$ exportadas al MERCOSUR en el año $t$. |
+| $I(v, t)$ | Real $\ge 0$ | 25 | Cantidad de vehículos del modelo $v$ almacenados en el playón al 31 de diciembre del año $t$ ($I(v, 0) = 0$). |
+| $wA(t), wB(t)$ | Binaria $\{0, 1\}$ | 10 | Variable de activación del **Turno Mañana** de la Línea A / Línea B en el año $t$. Si vale 1, devenga su costo fijo y laboral base. |
+| $yA(t), yB(t)$ | Binaria $\{0, 1\}$ | 10 | Variable de activación del **Turno Tarde** de la Línea A / Línea B en el año $t$. |
+| $z(t)$ | Binaria $\{0, 1\}$ | 5 | Variable indicadora de turno tarde general: vale 1 si al menos una línea opera el Turno Tarde en el año $t$ (dispara los 5 operarios sindicales). |
+
+---
+
+### a.iii) Función Objetivo (Funcional Z)
+
+El objetivo es **maximizar la Utilidad Neta Total consolidada en USD a lo largo de los 5 años**:
+
+$$\max Z = \sum_{t=1}^5 \left[ 	ext{Ingresos}(t) - rac{	ext{Costos en Pesos}(t)}{TC(t)} ight]$$
+
+#### 1. Bloque de Ingresos por Ventas (USD):
+$$	ext{Ingresos}(t) = \sum_{v \in VEH} sLoc(v, t) \cdot P_{	ext{local}}(v) + \sum_{v \in PU} sExp(v, t) \cdot \left[ P_{	ext{local}}(v) \cdot 1,05 ight] + Q_{	ext{autonomy}} \cdot P_{	ext{autonomy}}$$
+
+#### 2. Bloque de Costos Operativos en Moneda Local (ARS inflacionados al 20% anual):
+$$	ext{Costos en Pesos}(t) = C_{	ext{var}}(t) + C_{	ext{inv}}(t) + C_{	ext{encendido}}(t) + C_{	ext{laboral}}(t)$$
+
+* **Costo Variable de Ensamble:** $C_{	ext{var}}(t) = \sum_{v, l, s} X(v, l, s, t) \cdot CV1(v) \cdot (1,20)^{t-1}$
+* **Costo de Mantenimiento en Playón (25% anual):** $C_{	ext{inv}}(t) = \sum_{v} I(v, t) \cdot \left[ 0,25 \cdot CV1(v) \cdot (1,20)^{t-1} ight]$
+* **Costo Fijo de Encendido de Línea por Turno:** $C_{	ext{encendido}}(t) = \left[ 500.000.000 \cdot (wA+yA) + 800.000.000 \cdot (wB+yB) ight] \cdot (1,20)^{t-1}$
+* **Costo Salarial Total Cargado (13 meses con aguinaldo):** $C_{	ext{laboral}}(t) = 26.000.000 \cdot (1,20)^{t-1} \cdot \left[ 8 \cdot (wA+yA) + 10 \cdot (wB+yB) + 5 \cdot z ight]$
+
+---
+
+### a.iv) Parámetros del Modelo
+
+| Parámetro / Concepto | Año 1 | Año 2 | Año 3 | Año 4 | Año 5 |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Factor Inflación de Costos (20% a.a.)** | 1,0000 | 1,2000 | 1,4400 | 1,7280 | 2,0736 |
+| **Tipo de Cambio Escenario Base (ARS/USD)** | 1.500 | 1.750 | 1.950 | 2.350 | 2.800 |
+| **Tipo de Cambio Devaluación (ARS/USD)** | 1.500 | 2.200 | 2.650 | 3.100 | 3.550 |
+| **Sueldo anual x operario (ARS c/SAC)** | $26.000.000 | $31.200.000 | $37.440.000 | $44.928.000 | $53.913.600 |
+| **Encendido Línea A Base (USD)** | $333.333 | $342.857 | $369.231 | $367.660 | $370.286 |
+| **Encendido Línea B Base (USD)** | $533.333 | $548.571 | $590.769 | $588.255 | $592.457 |
+| **CV Unitario LB Base (USD)** | $26.667 | $27.429 | $29.538 | $29.413 | $29.623 |
+| **CV Unitario LP Base (USD)** | $28.800 | $29.623 | $31.902 | $31.766 | $31.993 |
+| **CV Unitario PB Base (USD)** | $38.333 | $39.429 | $42.462 | $42.281 | $42.583 |
+| **CV Unitario PM Base (USD)** | $39.483 | $40.611 | $43.735 | $43.549 | $43.860 |
+| **CV Unitario PP Base (USD)** | $40.633 | $41.794 | $45.009 | $44.818 | $45.138 |
+| **Precios de Lista Local (USD)** | LB: 30.000 | LP: 35.000 | PB: 45.000 | PM: 50.000 | PP: 57.500 |
+
+---
+
+### a.v) Restricciones Formales del Sistema (135 Ecuaciones)
+
+* **R1. Precedencia de Turnos (10 ec.):** $yA(t) \le wA(t)$ y $yB(t) \le wB(t)$ (no se abre la tarde sin la mañana).
+* **R2. Lógica de Peligrosidad (15 ec.):** $z(t) \ge yA(t), z(t) \ge yB(t), z(t) \le yA(t) + yB(t)$ (activa los 5 operarios extra).
+* **R3. Capacidad Línea A (10 ec.):** $\sum_{LIV} X(v, A, M, t) \le 10.000 \cdot wA(t)$ y $\sum_{LIV} X(v, A, T, t) \le 7.500 \cdot yA(t)$. Pick-ups forzadas a cero.
+* **R4. Capacidad Mixta Línea B (10 ec.):** $rac{\sum_{LIV} X(v, B, M, t)}{30.000} + rac{\sum_{PU} X(v, B, M, t)}{25.000} \le 1,0 \cdot wB(t)$ y $\le 0,75 \cdot yB(t)$ para Tarde.
+* **R5. Balance de Inventarios (25 ec.):** $I(v, t-1) + \sum X(v, l, s, t) = sLoc(v, t) + sExp(v, t) + 	ext{Autonomy}(v, t) + I(v, t)$.
+* **R6. Topes de Demanda y Contratos (40 ec.):** $sLoc \le 	ext{DemandaLocal}(t)$; $sExp \le 	ext{DemandaExport}$; $	ext{Autonomy} = 1.000	ext{ LB/año}$.
+* **R7. Integralidad y No Negatividad:** $X, sLoc, sExp, I \ge 0$; $wA, wB, yA, yB, z \in \{0, 1\}$.
+
+---
+
+### a.vi) Resolución del Modelo
+El modelo tiene **135 variables (110 continuas y 25 binarias) y 135 restricciones**. Se resolvió con **PuLP y CBC**, aplicando Branch & Bound en menos de 0,5 segundos y con gap 0%.
+* **Valor Óptimo del Funcional:** **USD 1.916.300.845** (o USD 1.993.488.793 si se confirma la propuesta de 1.500 PP de agronegocios).
+
+---
+
+## Sección 2: Análisis de Sensibilidad de la Respuesta
+
+La Clase 06 de la cátedra señala que en programación lineal entera no existe análisis post-óptimo automático porque el problema se resuelve por Branch & Bound. Para obtener los precios sombra se fijaron las variables binarias en su valor óptimo y se resolvió el LP resultante.
+
+### b.i) Rangos de Nivel de Actividad (Recursos y Capacidad)
+
+| Recurso / Restricción | Valor Final | Término Indep. | Holgura ($S_i$) | Precio Sombra ($\pi_i$) | Incremento Permisible | Decremento Permisible |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Capacidad Línea A Mañana (Año 1)** | 7.500,0 | 10.000,0 | 2.500,0 | $0 | Sin límite | 2.500,0 |
+| **Capacidad Línea B Mañana (Año 1)** | 25.000,0 | 25.000,0 | 0,0 | $0 | Sin límite | 0,0 |
+| **Capacidad Línea B Tarde (Año 1)** | 13.500,0 | 18.750,0 | 5.250,0 | $0 | Sin límite | 5.250,0 |
+| **Capacidad Línea A Mañana (Año 5)** | 8.315,8 | 10.000,0 | 1.684,2 | $0 | Sin límite | 1.684,2 |
+| **Capacidad Línea B Mañana (Año 5)** | 25.000,0 | 25.000,0 | 0,0 | $0 | 7.101,9 | 0,0 |
+| **Capacidad Línea B Tarde (Año 5)** | 18.241,1 | 18.750,0 | 508,9 | $0 | Sin límite | 508,9 |
+
+* **Conclusión sobre Capacidad:** Todos los precios sombra de capacidad son cero en los Años 1 a 4: una unidad extra de capacidad no aportaría nada al funcional porque la demanda ya está satisfecha al 100%. Esto explica por qué el reequipamiento no se justifica sin boom (Consigna 3) y por qué el contrato con Autonomy no desplaza capacidad (Consigna 5).
+
+### b.ii) Rangos de Soluciones Posibles (Productos y Precios)
+
+Ningún producto queda fuera de la solución ($X_j > 0$). Todos los costos reducidos de las variables básicas son cero.
+
+| Producto / Canal | Valor 5 Años (u) | Precio Lista ($c_j$) | Costo Reducido | Decremento Permisible | Precio Piso ($c_j - \Delta$) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **LB Local** | 10.618,3 | USD 30.000 | 0 | USD 377,1 | **USD 29.623** |
+| **LP Local** | 23.891,1 | USD 35.000 | 0 | USD 3.007,3 | **USD 31.993** |
+| **PB Local** | 66.307,6 | USD 45.000 | 0 | USD 2.417,1 | **USD 42.583** |
+| **PB Exportación** | 20.000,0 | USD 47.250 | 0 | USD 4.667,1 | **USD 42.583** |
+| **PM Local** | 22.102,5 | USD 50.000 | 0 | USD 6.139,7 | **USD 43.860** |
+| **PM Exportación** | 37.500,0 | USD 52.500 | 0 | USD 8.639,7 | **USD 43.860** |
+| **PP Local** | 33.153,8 | USD 57.500 | 0 | USD 12.362,2 | **USD 45.138** |
+| **PP Exportación** | 25.000,0 | USD 60.375 | 0 | USD 15.237,2 | **USD 45.138** |
+
+* **Conclusión sobre Precios:** El incremento permisible es infinito porque ya se abastece el 100% de la demanda. El decremento permisible coincide con el margen unitario del año más ajustado (Año 5). El caso más crítico es el **LB local**, que apenas soporta una caída de precio de **USD 377** sobre USD 30.000 (1,2%).
+
+---
+
+## Sección 3: Representación Gráfica del Proceso Productivo
+
+```
+                    TERMINAL AUTOMOTRIZ ZÁRATE - AUTOITBA S.A.
++-----------------------------------------------------------------------------------------+
+|                                                                                         |
+|  [LÍNEA A: LIVIANOS]                                                                   |
+|  (Cap: 10.000 M / 7.500 T)                                                              |
+|       |                                                                                 |
+|       +--> [Chasis: 1 op] --> [Pintura: 1 op] --> [Motor: 2 op] --> [Detalles: 5 op] --+
+|                                                                         |               |
+|                                                                         |               v
+|  [LÍNEA B: PICK-UPS / LIV]                                              |       [PLAYÓN DE]
+|  (Cap: 25k P / 30k L (M))                                               |       [DESPACHO ]
+|  (Cap: 18.75k P / 22.5k L (T))                                          |       [INVENTARIO]
+|       |                                                                 |               ^
+|       +--> [Chasis: 1 op] --> [Pintura: 1 op] --> [Motor: 2 op] --> [Detalles: 7 op] --+
+|                                                                         |
+|                                                                         |
+|  [TURNO TARDE - SINDICATO]                                              |
+|  +5 Operarios adicionales conjuntos de supervisión por peligrosidad ----+
+|                                                                                         |
++-----------------------------------------------------------------------------------------+
+                                          |
+                                          +--> MERCADO LOCAL (LB, LP, PB, PM, PP)
+                                          +--> EXPORTACIÓN MERCOSUR (+5% USD) (PB, PM, PP)
+                                          +--> CONTRATO AUTONOMY (LB - USD 27.500)
+                                          +--> PROPUESTA AGRONEGOCIOS (PP - USD 57.500)
+```
+
+---
+
+## Sección 4: Librerías Utilizadas
+
+1. **`pulp` (v3.3.2):** Interfaz de modelado algebraico para declarar variables continuas/binarias, restricciones y el funcional objetivo. Es la librería recomendada formalmente en el enunciado.
+2. **`CBC` (COIN-OR Branch and Cut v2.10):** Motor de cálculo entero mixto incluido en PuLP. Resuelve el problema aplicando Branch & Bound con generación de planos de corte y gap 0.
+3. **`pandas` (v3.0.6):** Procesamiento de estructuras de datos tabulares, ingesta de parámetros desde Excel mediante `pandas.read_excel()` y exportación de matrices de pagos y arrepentimiento.
+4. **`openpyxl` (v3.1.5):** Construcción estructurada del libro de trabajo de base de datos (`AutoITBA_Parametros.xlsx`) con fórmulas vivas.
+5. **`matplotlib` (v3.11.2):** Generación de gráficos analíticos de barras apiladas, sensibilidad continua de inventario, curvas de beneficio incremental y diagrama de proceso en alta resolución (300 DPI).
+6. **`scipy` (v1.18.1):** Operaciones auxiliares para barridos continuos y búsquedas de raíz para precios de indiferencia.
+
+---
+
+## Sección 5: Desarrollo Punto por Punto y Procedimientos Utilizados
 
 ---
 
@@ -105,7 +257,7 @@ El script principal llama a la función `solve_model(scenario='base')` dentro de
      * $S$: Cuánto vender en el mercado local, cuánto exportar y cuánto entregar a contratos especiales (Autonomy y Agronegocios).
      * $I$: Cuántos autos quedan guardados en el playón al final de cada año.
 3. **Los bucles de restricciones (Las reglas que no se pueden romper):**
-   * *Bucle de Balance de Inventario:* Por cada año y por cada modelo, se asegura de que:
+   * *Bucle de Balance de Inventario:* Por cada año y por cada modelo, asegura que:
      $$	ext{Lo que tenía del año pasado} + 	ext{Lo que fabriqué hoy} = 	ext{Lo que vendo hoy} + 	ext{Lo que me sobra}$$
    * *Bucle de Capacidad de Máquinas:* La Línea A no puede superar 10.000 autos a la mañana ni 7.500 a la tarde. Para la Línea B se aplica la regla de que 1 pick-up equivale a 1,2 livianos de espacio en la cinta.
    * *Bucle de Jerarquía de Turnos:* No se permite abrir la tarde si la mañana de esa misma línea está apagada.
@@ -163,7 +315,7 @@ El gerente operativo quiere adaptar la Línea A para ensamblar pick-ups, aprovec
 #### 2. ¿Cómo lo resuelve el código por dentro?
 En `model_engine.py` y `run_experiments.py`:
 1. Se parametriza el año de obra `retool_line_A_year` $\in \{1, 2, 3, 4, 5\}$.
-2. En el año de obra $t$, se fija forzosamente $wA(t) = yA(t) = 0$ (parada total de planta).
+2. En el año de obra $t$, se fija forzosamente $wA(t) = yA(t) = 0$ (parada total de planta en Línea A).
 3. A partir del año $t+1$, se habilita a la Línea A para fabricar pick-ups aplicando el factor de equivalencia (capacidad 8.333 pick-ups/año mañana y 6.250 tarde).
 4. Se descuenta la inversión (USD 12M, 15M o 18M) del funcional y se corre para demanda base y para demanda con boom (+20% en pick-ups).
 
