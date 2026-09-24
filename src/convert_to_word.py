@@ -21,16 +21,16 @@ def set_cell_margins(cell, top=80, bottom=80, left=120, right=120):
         tcMar.append(node)
     tcPr.append(tcMar)
 
-def format_table(table, col_widths=None, header_bg="1F4E79", zebra=True):
+def format_table(table, header_bg="1F4E79", zebra=True):
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    for i, cell in enumerate(table.rows[0].cells):
+    for cell in table.rows[0].cells:
         cell.paragraphs[0].runs[0].font.bold = True
         cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
         cell.paragraphs[0].runs[0].font.size = Pt(9.5)
         set_cell_background(cell, header_bg)
         set_cell_margins(cell, 100, 100, 120, 120)
     for r_idx, row in enumerate(table.rows[1:], start=1):
-        for c_idx, cell in enumerate(row.cells):
+        for cell in row.cells:
             cell.paragraphs[0].runs[0].font.size = Pt(9.0)
             if zebra and r_idx % 2 == 1:
                 set_cell_background(cell, "F2F5F9")
@@ -39,15 +39,15 @@ def format_table(table, col_widths=None, header_bg="1F4E79", zebra=True):
 def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
     doc = docx.Document()
     
-    # Page setup - Margins
+    # Page Margins
     for section in doc.sections:
         section.top_margin = Inches(1.0)
         section.bottom_margin = Inches(1.0)
         section.left_margin = Inches(1.0)
         section.right_margin = Inches(1.0)
         
-    COLOR_PRIMARY = RGBColor(31, 78, 121)     # ITBA Navy Blue #1F4E79
-    COLOR_SECONDARY = RGBColor(47, 85, 151)   # Slate Blue #2F5597
+    COLOR_PRIMARY = RGBColor(31, 78, 121)     # ITBA Navy Blue
+    COLOR_SECONDARY = RGBColor(47, 85, 151)   # Slate Blue
     COLOR_DARK = RGBColor(38, 38, 38)
     COLOR_MUTED = RGBColor(89, 89, 89)
     
@@ -82,7 +82,7 @@ def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
     p_sub = doc.add_paragraph()
     p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_sub.paragraph_format.space_after = Pt(28)
-    r_sub = p_sub.add_run("Optimización Matemática (MILP), Demostraciones Analíticas y Recomendación Estratégica (2026-2030)")
+    r_sub = p_sub.add_run("Optimización Matemática (MILP), Procedimientos de Código Paso a Paso y Verificación de Respuestas")
     r_sub.font.name = "Calibri"
     r_sub.font.size = Pt(12)
     r_sub.font.italic = True
@@ -115,7 +115,7 @@ def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
     # -------------------------------------------------------------
     # RESUMEN EJECUTIVO Y TABLA DE CONSIGNAS
     # -------------------------------------------------------------
-    h1 = doc.add_heading("Resumen Ejecutivo y Cuadro de Respuestas", level=1)
+    h1 = doc.add_heading("Resumen Ejecutivo y Cuadro de Respuestas a las Consignas", level=1)
     h1.runs[0].font.color.rgb = COLOR_PRIMARY
     
     doc.add_paragraph(
@@ -130,8 +130,8 @@ def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
     for i, h in enumerate(sum_headers):
         table_sum.rows[0].cells[i].text = h
     sum_data = [
-        ("1. Plan Óptimo Base", "Producción, turnos y cobertura a 5 años", "Utilidad: USD 1.916,3 M / 1.993,5 M (Inv = 0)", "Línea A Mañana; Línea B Mañana y Tarde. 100% demanda cubierta."),
-        ("2. Devaluación", "Impacto de tipo de cambio acelerado", "Utilidad: USD 3.779,1 M (+96,1%)", "Costos en pesos se licúan en USD. Turno tarde en Línea B es indispensable."),
+        ("1. Plan Óptimo Base", "Producción, turnos y cobertura a 5 años", "Utilidad: USD 1.993,49 M (Inv = 0)", "Línea A Mañana; Línea B Mañana y Tarde. 100% demanda cubierta."),
+        ("2. Devaluación", "Impacto de tipo de cambio acelerado", "Utilidad: USD 3.910,05 M (+96,1%)", "Costos en pesos se licúan en USD. Turno tarde en Línea B es indispensable."),
         ("3. Reequipamiento", "Inversión USD 12M-18M para pick-ups en Línea A", "Base: Inviable (-USD 16M a -31M)\nBoom (+20%): +USD 33M a +39M", "No reequipar en demanda normal. Con Boom Agropecuario, hacer la obra en Año 1."),
         ("4. Importación China", "Reemplazo de livianos locales desde Año 2", "Base: +USD 109,7 M\nDevaluación: -USD 115,7 M\nCierre Año 3: -USD 69,1 M", "No desmantelar la planta local. Riesgo regulatorio y cambiario extremo."),
         ("5. Contrato Autonomy", "1.000 LB anuales a USD 27.500 fijo", "Costo oportunidad: +USD 5,17 M\nPrecio indiferencia: USD 28.534/u", "A USD 27.500 da pérdida en Años 3-5. Renegociar a > USD 28.550 o liberar capacidad."),
@@ -185,19 +185,8 @@ def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
             table_var.rows[r_idx].cells[c_idx].text = val
     format_table(table_var)
 
-    # Función Objetivo
-    doc.add_heading("a.iii) Función Objetivo (Funcional Z)", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
-    p_fo = doc.add_paragraph()
-    p_fo.add_run("MAX Z = ∑ [ Ingresos(t) - Costos_USD(t) ]\n").font.bold = True
-    p_fo.add_run("• Ingresos(t) = ∑ sLoc(v,t)·P_local(v) + ∑ sExp(v,t)·[P_local(v)·1.05] + Autonomy(t)·27.500\n")
-    p_fo.add_run("• Costos_USD(t) = [ C_var(t) + C_inv(t) + C_encendido(t) + C_laboral(t) ] / TC(t)\n")
-    p_fo.add_run("  - C_var(t) = ∑ X(v,l,s,t) · CV1(v) · (1.20)^(t-1)\n")
-    p_fo.add_run("  - C_inv(t) = ∑ I(v,t) · 0.25 · CV1(v) · (1.20)^(t-1)\n")
-    p_fo.add_run("  - C_encendido(t) = [ 500M·(wA+yA) + 800M·(wB+yB) ] · (1.20)^(t-1)\n")
-    p_fo.add_run("  - C_laboral(t) = 26M · [ 8·(wA+yA) + 10·(wB+yB) + 5·z ] · (1.20)^(t-1)")
-
     # Parámetros
-    doc.add_heading("a.iv) Parámetros del Modelo", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_heading("a.iii) Parámetros del Modelo", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
     table_par = doc.add_table(rows=13, cols=6)
     p_headers = ["Parámetro / Concepto", "Año 1", "Año 2", "Año 3", "Año 4", "Año 5"]
     for i, h in enumerate(p_headers):
@@ -222,7 +211,7 @@ def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
     format_table(table_par)
 
     # Restricciones
-    doc.add_heading("a.v) Restricciones Formales (135 Ecuaciones)", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_heading("a.iv) Restricciones Formales (135 Ecuaciones)", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
     restricciones = [
         ("R1. Precedencia de Turnos (10 ec.):", "yA(t) <= wA(t)  y  yB(t) <= wB(t) (no se puede activar el turno tarde sin la mañana)."),
         ("R2. Lógica de Peligrosidad (15 ec.):", "z(t) >= yA(t), z(t) >= yB(t), z(t) <= yA(t) + yB(t) (dispara los 5 operarios de peligrosidad si hay tarde)."),
@@ -262,44 +251,54 @@ def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
     doc.add_page_break()
 
     # -------------------------------------------------------------
-    # SECCIÓN 2: DESARROLLO ANALÍTICO Y RESPUESTAS A LAS CONSIGNAS
+    # SECCIÓN 2: DESARROLLO ANALÍTICO Y PROCEDIMIENTOS UTILIZADOS
     # -------------------------------------------------------------
-    h_sec2 = doc.add_heading("Sección 2: Demostraciones Analíticas y Consignas 1 a 7", level=1)
+    h_sec2 = doc.add_heading("Sección 2: Procedimientos de Código Paso a Paso y Verificación de Respuestas", level=1)
     h_sec2.runs[0].font.color.rgb = COLOR_PRIMARY
 
-    # Consigna 1
-    doc.add_heading("Consigna 1: Formulación y Plan Óptimo para el Escenario Base", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
+    # CONSIGNA 1
+    doc.add_heading("CONSIGNA 1: El Modelo Base a 5 Años", level=2).runs[0].font.color.rgb = COLOR_PRIMARY
+    doc.add_heading("1. ¿Cuál es la idea de negocio?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "1. Planteo y Modelo Conceptual:\n"
-        "La empresa enfrenta un problema de asignación de capacidad con costos fijos escalonados. La Línea B tiene un costo fijo "
-        "de encendido anual muy superior al de la Línea A (800 M ARS vs 500 M ARS), y sus operarios demandan salarios más elevados por la mayor dotación "
-        "(10 operarios vs 8). Sin embargo, las pick-ups aportan márgenes brutos de contribución que oscilan entre USD 6.667 y USD 16.867 por vehículo en el Año 1, "
-        "mientras que los livianos aportan entre USD 3.333 (LB) y USD 6.200 (LP)."
-    )
-    doc.add_paragraph(
-        "2. Resultados Numéricos:\n"
-        "Al ejecutar el algoritmo Simplex y Branch & Bound con PuLP / CBC:\n"
-        "• Utilidad Neta Total a 5 Años: USD 1.916.300.845 (sin propuesta adicional de agronegocios) o USD 1.993.488.793 (con propuesta de agronegocios).\n"
-        "• Turnos Activos: Línea A opera solo turno mañana los 5 años (wA=1, yA=0). Línea B opera en doble turno mañana y tarde los 5 años (wB=1, yB=1).\n"
-        "• Inventario en Playón: 0 unidades en todos los años."
+        "Determinar la estrategia óptima para los próximos 5 años bajo las condiciones esperadas (\"Escenario Base\"):\n"
+        "• ¿Qué turnos nos conviene prender en cada línea cada año?\n"
+        "• ¿Cuántas unidades fabricar de cada modelo?\n"
+        "• ¿Nos conviene fabricar de más y guardar autos en el playón (stock) para el año siguiente, o fabricar justo lo que se vende?"
     )
     
-    # Table 1: Financial breakdown
-    table_c1 = doc.add_table(rows=5, cols=7)
-    c1_h = ["Concepto Financiero", "Año 1", "Año 2", "Año 3", "Año 4", "Año 5", "Total Acumulado"]
-    for i, h in enumerate(c1_h):
-        table_c1.rows[0].cells[i].text = h
-    c1_data = [
-        ("Tipo de Cambio (ARS/USD)", "1.500", "1.750", "1.950", "2.350", "2.800", "—"),
-        ("Ingresos Totales (USD)", "$2.214,6 M", "$2.275,4 M", "$2.339,1 M", "$2.405,8 M", "$2.475,7 M", "$11.710,7 M"),
-        ("Costos Totales (USD)", "-$1.725,9 M", "-$1.825,2 M", "-$2.022,0 M", "-$2.072,2 M", "-$2.149,1 M", "-$9.794,4 M"),
-        ("Utilidad Neta (USD)", "$488,7 M", "$450,2 M", "$317,1 M", "$333,6 M", "$326,7 M", "$1.916,3 M")
-    ]
-    for r_idx, r_data in enumerate(c1_data, start=1):
-        for c_idx, val in enumerate(r_data):
-            table_c1.rows[r_idx].cells[c_idx].text = val
-    format_table(table_c1)
-
+    doc.add_heading("2. ¿Cómo lo resuelve el código por dentro?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_paragraph(
+        "El script principal llama a la función solve_model(scenario='base') dentro de model_engine.py. Esto es lo que hace paso a paso:\n\n"
+        "1. La conversión de monedas (Pesos a Dólares):\n"
+        "   • Los precios de venta están fijados en dólares (USD).\n"
+        "   • Pero los sueldos, el costo de encender las máquinas y los insumos locales están en pesos argentinos (ARS) y aumentan un 20% anual por inflación.\n"
+        "   • El código hace un bucle año por año (for t in years) y calcula cuánto representa cada costo en dólares dividiendo por el dólar oficial de ese año (1.500, 1.750, 1.950, 2.350 y 2.800).\n\n"
+        "2. Las 'palancas' que el modelo puede mover (Variables de Decisión):\n"
+        "   • Variables binarias (Y y W_tarde): Son como llaves de luz (valen 1 o 0).\n"
+        "     - Y: ¿Prendemos la Línea A a la mañana? ¿A la tarde? ¿Y la Línea B?\n"
+        "     - W_tarde: Si alguna línea abre a la tarde, el sindicato exige contratar 5 operarios extra de peligrosidad. Esta variable se prende en 1 automáticamente si alguna línea trabaja a la tarde.\n"
+        "   • Variables continuas (X, S, I):\n"
+        "     - X: Cuántos autos fabricar de cada modelo en cada turno y línea.\n"
+        "     - S: Cuánto vender en el mercado local, cuánto exportar y cuánto entregar a contratos especiales (Autonomy y Agronegocios).\n"
+        "     - I: Cuántos autos quedan guardados en el playón al final de cada año.\n\n"
+        "3. Los bucles de restricciones (Las reglas que no se pueden romper):\n"
+        "   • Bucle de Balance de Inventario: Por cada año y por cada modelo, asegura que:\n"
+        "     Lo que tenía del año pasado + Lo que fabriqué hoy = Lo que vendo hoy + Lo que me sobra\n"
+        "   • Bucle de Capacidad de Máquinas: La Línea A no puede superar 10.000 autos a la mañana ni 7.500 a la tarde. Para la Línea B se aplica la regla de que 1 pick-up equivale a 1,2 livianos de espacio en la cinta.\n"
+        "   • Bucle de Jerarquía de Turnos: No se permite abrir la tarde si la mañana de esa misma línea está apagada.\n"
+        "   • Bucle de Demanda: No podés vender más autos de los que los clientes quieren comprar.\n\n"
+        "4. La Función Objetivo (El criterio de éxito):\n"
+        "   • El código le dice al solver: \"Maximizá la suma de todos los ingresos por ventas menos todos los costos (insumos, sueldos, encendido de líneas y costo de playón)\"."
+    )
+    
+    doc.add_heading("3. ¿Qué resultado arroja y qué significa?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_paragraph(
+        "• Ganancia total acumulada a 5 años: USD 1.993,49 Millones (o USD 1.916,30 M sin agronegocios).\n"
+        "• Línea A (Livianos): Trabaja solo en Turno Mañana. Nunca hace falta prender el turno tarde porque la demanda de livianos es chica y la mañana alcanza de sobra.\n"
+        "• Línea B (Pick-ups): Trabaja a doble turno pleno (Mañana y Tarde) todos los 5 años. Las pick-ups dejan mucho más margen de ganancia, por lo que conviene explotar la línea al máximo.\n"
+        "• Inventario (Playón): Da cero (0 unidades) en todos los años. Tener autos parados en el playón cuesta un 25% anual de su valor, lo cual es carísimo; el modelo concluye que lo más inteligente es una producción Just-in-Time (fabricar y despachar en el mismo año)."
+    )
+    
     plot_mix = os.path.join("plots", "fig2_mix_produccion_base.png")
     if os.path.exists(plot_mix):
         doc.add_picture(plot_mix, width=Inches(5.5))
@@ -308,38 +307,46 @@ def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
         p_cap.runs[0].font.italic = True
         p_cap.runs[0].font.size = Pt(9.5)
 
+    # CONSIGNA 2
+    doc.add_heading("CONSIGNA 2: Evaluación de Devaluación Acelerada", level=2).runs[0].font.color.rgb = COLOR_PRIMARY
+    doc.add_heading("1. ¿Cuál es la idea de negocio?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "3. Interpretación Económica y Fenómeno de Compresión de Margen:\n"
-        "Aunque el volumen físico vendido crece año tras año (de 46.000 a 51.557 vehículos), la utilidad anual cae de USD 489 M a USD 327 M. "
-        "Esto no es un problema de volumen sino de margen: los costos aumentan al 20% anual en pesos, mientras que el tipo de cambio oficial del REM "
-        "se devalúa a un ritmo menor en los años 2 a 4. El tipo de cambio se atrasa frente a la inflación de costos, comprimiendo el margen unitario en dólares."
-    )
-
-    # Consigna 2
-    doc.add_heading("Consigna 2: Evaluación del Escenario de Mayor Devaluación", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
-    doc.add_paragraph(
-        "1. Mecanismo de Transmisión Económica:\n"
-        "Al devaluarse el peso de manera acelerada (1.500 -> 2.200 -> 2.650 -> 3.100 -> 3.550), la conversión de los costos operativos en pesos "
-        "hacia dólares se reduce drásticamente: Costo_USD(t) = Costos_ARS(t) / TC(t). Los ingresos permanecen constantes por estar fijados contractualmente en USD. "
-        "Por ende, la Utilidad Neta a 5 años casi se duplica, pasando de USD 1.916,3 M a USD 3.779,1 M (+97,2%)."
+        "Evaluar qué le pasa a la empresa si la economía argentina sufre una devaluación más fuerte de lo previsto "
+        "(el dólar pasa de $1.500 en el Año 1 a $3.550 en el Año 5, en vez de los $2.800 del caso base). Las preguntas centrales de la cátedra son:\n"
+        "1. ¿Aumenta o disminuye la ganancia neta?\n"
+        "2. ¿Cambia la conveniencia de activar el turno tarde?\n"
+        "3. ¿Cambia la proporción de autos que vendemos en Argentina versus lo que exportamos al MERCOSUR?"
     )
     
-    table_c2 = doc.add_table(rows=6, cols=6)
-    c2_h = ["Métrica / Margen Unitario", "Año 1", "Año 2", "Año 3", "Año 4", "Año 5"]
-    for i, h in enumerate(c2_h):
-        table_c2.rows[0].cells[i].text = h
-    c2_data = [
-        ("Utilidad Base (USD M)", "$488,7", "$450,2", "$317,1", "$333,6", "$326,7"),
-        ("Utilidad Devaluación (USD M)", "$488,7", "$823,5", "$851,2", "$835,0", "$780,7"),
-        ("Margen LB Base (USD)", "$3.333", "$2.571", "$462", "$587", "$377"),
-        ("Margen LB Devaluación (USD)", "$3.333", "$8.182", "$8.264", "$7.703", "$6.635"),
-        ("Margen PP Devaluación (USD)", "$16.867", "$24.255", "$24.380", "$23.525", "$21.898")
-    ]
-    for r_idx, r_data in enumerate(c2_data, start=1):
-        for c_idx, val in enumerate(r_data):
-            table_c2.rows[r_idx].cells[c_idx].text = val
-    format_table(table_c2)
-
+    doc.add_heading("2. ¿Cómo lo resuelve el código por dentro?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_paragraph(
+        "En run_experiments.py:\n"
+        "1. Reutiliza el mismo motor: Llama a model.solve_model(scenario='devaluacion').\n"
+        "2. Cambia el vector de Tipo de Cambio: En lugar de dividir los costos en pesos por el sendero base, usa el sendero devaluado:\n"
+        "   • Año 1: $1.500\n"
+        "   • Año 2: $2.200 (en vez de $1.750)\n"
+        "   • Año 3: $2.650 (en vez de $1.950)\n"
+        "   • Año 4: $3.100 (en vez de $2.350)\n"
+        "   • Año 5: $3.550 (en vez de $2.800)\n"
+        "3. El efecto matemático: Como los ingresos de la empresa están en dólares fijos, pero gran parte de los costos operativos están en pesos con inflación del 20%, "
+        "un dólar más alto hace que los costos medidos en dólares se licúen (se hagan mucho más chicos). Por ejemplo, en el Año 5 fabricar una pick-up básica "
+        "pasa de costar USD 42.583 en el caso base a costar USD 33.586 en el escenario devaluado.\n"
+        "4. Comparación automática: El código compara las métricas clave de ambos escenarios calculando diff_dev = res_dev['objective_value'] - res_base['objective_value'] "
+        "e itera año por año comparando los turnos activos y los totales vendidos en el mercado local y de exportación."
+    )
+    
+    doc.add_heading("3. ¿Qué conclusiones arroja la Consigna 2?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_paragraph(
+        "1. Impacto en la ganancia: La utilidad casi se duplica, saltando de USD 1.993,49 M a USD 3.910,05 M (+96,14% de ganancia extra). "
+        "Al ser una industria con costos locales en pesos e ingresos en dólares, la devaluación la vuelve enormemente rentable.\n"
+        "2. ¿Conviene prender el turno tarde? Sí, con más razón que nunca. Si en el caso base ya era rentable, con costos salariales licuados en dólares "
+        "el turno tarde de la Línea B es una máquina de generar margen neto. Apagarlo sería un error gravísimo.\n"
+        "3. ¿Cambia el mix local vs exportación?\n"
+        "   • En los Años 1 a 4, la fábrica abastece el 100% de ambos mercados.\n"
+        "   • En el Año 5, la demanda total de pick-ups supera el tope físico de la Línea B (43.750 camionetas). Ante este cuello de botella, el modelo prioriza siempre al 100% las exportaciones, "
+        "porque pagan un sobreprecio del 5% en dólares limpios, y ajusta apenas 282 unidades de la pick-up básica en el mercado local (por ser la de menor margen)."
+    )
+    
     plot_dev = os.path.join("plots", "fig1_utilidad_base_vs_dev.png")
     if os.path.exists(plot_dev):
         doc.add_picture(plot_dev, width=Inches(5.5))
@@ -348,36 +355,31 @@ def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
         p_cap.runs[0].font.italic = True
         p_cap.runs[0].font.size = Pt(9.5)
 
+    # CONSIGNA 3
+    doc.add_heading("CONSIGNA 3: Reequipamiento de la Línea A a Pick-ups", level=2).runs[0].font.color.rgb = COLOR_PRIMARY
+    doc.add_heading("1. ¿Cuál es la idea de negocio?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "2. Respuestas a la Dirección:\n"
-        "• ¿Cambia el mix local/exportación? NO. La empresa ya abastece el 100% de la demanda local y de exportación en ambos escenarios. La relación la fija el mercado.\n"
-        "• ¿Cambia la conveniencia del turno tarde? NO. Se vuelve aún más rentable mantener el turno tarde en la Línea B: sus costos en dólares bajan y aporta 18.750 pick-ups de alto margen."
+        "El gerente operativo quiere adaptar la Línea A para ensamblar pick-ups, aprovechando que es el segmento más rentable. "
+        "La obra exige parar la Línea A durante 1 año entero (capacidad = 0 ese año) e invertir entre USD 12M y USD 18M.\n"
+        "• ¿Existe algún escenario que justifique la inversión durante los 5 años?\n"
+        "• ¿Cambia si la demanda de pick-ups crece un +20% por un boom del campo?\n"
+        "• ¿Cuál es el año óptimo para realizar la obra?"
     )
-
-    # Consigna 3
-    doc.add_heading("Consigna 3: Reequipamiento de la Línea A a Pick-ups", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_heading("2. ¿Cómo lo resuelve el código por dentro?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "1. Planteo y Modelo Conceptual:\n"
-        "Se evalúa reequipar la Línea A para ensamblar pick-ups parando la línea 1 año (wA = yA = 0 en ese año) e invirtiendo entre USD 12M y 18M. "
-        "A partir del año siguiente, la línea puede ensamblar pick-ups (capacidad de 8.333 u/año mañana y 6.250 u/año tarde)."
+        "En model_engine.py y run_experiments.py:\n"
+        "1. Se parametriza el año de obra retool_line_A_year en cada uno de los 5 años posibles.\n"
+        "2. En el año de obra t, se fija forzosamente wA(t) = yA(t) = 0 (parada total de planta en Línea A).\n"
+        "3. A partir del año t+1, se habilita a la Línea A para fabricar pick-ups aplicando el factor de equivalencia (capacidad 8.333 pick-ups/año mañana y 6.250 tarde).\n"
+        "4. Se descuenta la inversión (USD 12M, 15M o 18M) del funcional y se corre para demanda base y para demanda con boom (+20% en pick-ups)."
     )
-    
-    table_c3 = doc.add_table(rows=6, cols=6)
-    c3_h = ["Año de Obra", "Neto Base (12M)", "Neto Base (18M)", "Neto Boom (12M)", "Neto Boom (15M)", "Neto Boom (18M)"]
-    for i, h in enumerate(c3_h):
-        table_c3.rows[0].cells[i].text = h
-    c3_data = [
-        ("Obra Año 1", "-$16,4 M", "-$22,4 M", "+$19,0 M", "+$16,0 M", "+$13,0 M"),
-        ("Obra Año 2", "-$20,5 M", "-$26,5 M", "+$4,6 M", "+$1,6 M", "-$1,4 M"),
-        ("Obra Año 3", "-$17,5 M", "-$23,5 M", "+$10,8 M", "+$7,8 M", "+$4,8 M"),
-        ("Obra Año 4", "-$21,5 M", "-$27,5 M", "-$7,7 M", "-$10,7 M", "-$13,7 M"),
-        ("Obra Año 5", "-$23,3 M", "-$29,3 M", "-$24,5 M", "-$27,5 M", "-$30,5 M")
-    ]
-    for r_idx, r_data in enumerate(c3_data, start=1):
-        for c_idx, val in enumerate(r_data):
-            table_c3.rows[r_idx].cells[c_idx].text = val
-    format_table(table_c3)
-
+    doc.add_heading("3. ¿Qué resultado arroja y qué significa?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_paragraph(
+        "• Demanda Base: NO CONVIENE EN NINGÚN AÑO. Parar la Línea A hace perder 7.500 livianos mientras que la Línea B ya alcanzaba para todas las pick-ups hasta el Año 4. "
+        "La inversión destruye entre USD 16M y 31M de caja.\n"
+        "• Boom Agropecuario (+20%): SÍ CONVIENE rotundamente. La demanda salta a 46.200 pick-ups, saturando la Línea B.\n"
+        "• Año Óptimo: AÑO 1. Aporta una ganancia neta de entre +USD 13,0M y +USD 19,0M neta de inversión, permitiendo aprovechar 4 años completos de capacidad dual expandida."
+    )
     plot_ret = os.path.join("plots", "fig4_reequipamiento_linea_A.png")
     if os.path.exists(plot_ret):
         doc.add_picture(plot_ret, width=Inches(5.5))
@@ -386,109 +388,75 @@ def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
         p_cap.runs[0].font.italic = True
         p_cap.runs[0].font.size = Pt(9.5)
 
+    # CONSIGNA 4
+    doc.add_heading("CONSIGNA 4: Importación de Livianos desde China", level=2).runs[0].font.color.rgb = COLOR_PRIMARY
+    doc.add_heading("1. ¿Cuál es la idea de negocio?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "2. Conclusiones Analíticas:\n"
-        "• Demanda Base: NO CONVIENE EN NINGÚN AÑO. Parar la Línea A hace perder las ventas de 7.500 livianos mientras que la Línea B ya alcanza "
-        "para todas las pick-ups hasta el Año 4. La inversión destruye entre USD 16M y 31M de caja.\n"
-        "• Boom Agropecuario (+20%): SÍ CONVIENE rotundamente. La demanda salta a 46.200 pick-ups, saturando la Línea B.\n"
-        "• Año Óptimo: AÑO 1. Permite aprovechar 4 años completos de ventas extraordinarias con una ganancia neta de entre +USD 13,0M y +USD 19,0M.\n"
-        "• Umbral Mínimo: El boom de demanda debe ser de al menos +17% sostenido para justificar la obra."
+        "Evaluar si AutoITBA debe cerrar la producción local de livianos a partir del Año 2 y reemplazarla por autos importados desde China a precio CIF "
+        "(LB: USD 25.000 / LP: USD 28.000), pagando USD 8.000.000 de costo único por indemnizaciones y logística.\n"
+        "• ¿Conviene en escenario base? ¿Y con devaluación?\n"
+        "• ¿Qué pasa si el nuevo gobierno cierra las importaciones en el Año 3?"
+    )
+    doc.add_heading("2. ¿Cómo lo resuelve el código por dentro?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_paragraph(
+        "1. Se activan variables de importación M_china(m, t) para m in {LB, LP} a partir de t >= 2.\n"
+        "2. Se fuerza a cero la producción local de livianos en la planta (X = 0).\n"
+        "3. Al cerrar la Línea A, el modelo ahorra automáticamente sus costos fijos de encendido y salarios (708 M ARS del Año 1).\n"
+        "4. Se introduce el riesgo regulatorio fijando M_china = 0 a partir de t >= 3, evaluando si la Línea A puede reabrirse o si queda cerrada irreversiblemente."
+    )
+    doc.add_heading("3. ¿Qué resultado arroja y qué significa?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_paragraph(
+        "• Escenario Base: Conviene (+USD 109,7 M de ganancia neta). Importar a USD 25k/28k es más barato que fabricar localmente a USD 27,4k-29,6k, sumado al ahorro de costos fijos de Línea A.\n"
+        "• Escenario Devaluación: NO CONVIENE (-USD 115,7 M de pérdida). La devaluación abarata los costos locales a USD 21,8k-23,4k, volviendo a la fábrica nacional mucho más competitiva.\n"
+        "• Riesgo Regulatorio en Año 3: Si se cierran importaciones y la línea fue desmantelada, la empresa pierde USD 69,1 M; si la línea es reabrible, la ganancia se desploma a apenas +USD 7,4 M. "
+        "No conviene desmantelar la fábrica."
     )
 
-    # Consigna 4
-    doc.add_heading("Consigna 4: Importación de Livianos desde China", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
+    # CONSIGNA 5
+    doc.add_heading("CONSIGNA 5: Evaluación del Contrato con Autonomy", level=2).runs[0].font.color.rgb = COLOR_PRIMARY
+    doc.add_heading("1. ¿Cuál es la idea de negocio?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "1. Planteo y Modelo Conceptual:\n"
-        "Se evalúa sustituir la fabricación local de livianos por importación CIF desde China desde el Año 2, asumiendo un costo único de transición de "
-        "USD 8.000.000 por indemnizaciones y logística. CIF Zárate: LB = USD 25.000, LP = USD 28.000."
+        "Autonomy ofrece comprar 1.000 unidades anuales de LB a precio fijo de USD 27.500 durante los 5 años.\n"
+        "• Área comercial: Lo defiende por estabilidad de volumen.\n"
+        "• Área financiera: Dice que ocupa capacidad y compromete rentabilidad.\n"
+        "• Preguntas: ¿Cuál es el costo de oportunidad? ¿A qué precio umbral deja de convenir?"
     )
-    
-    table_c4 = doc.add_table(rows=5, cols=4)
-    c4_h = ["Alternativa Evaluada", "Base (M USD)", "Devaluación (M USD)", "Impacto Incremental vs Local"]
-    for i, h in enumerate(c4_h):
-        table_c4.rows[0].cells[i].text = h
-    c4_data = [
-        ("Seguir Produciendo Localmente", "$1.916,3 M", "$3.779,1 M", "Base de comparación ($0,0)"),
-        ("Importar Livianos desde Año 2", "$2.025,9 M", "$3.663,4 M", "Base: +$109,6 M | Deval: -$115,7 M"),
-        ("Cierre en Año 3 (Línea Reabrible)", "$1.923,7 M", "$3.779,1 M", "+$7,4 M (Marginal)"),
-        ("Cierre en Año 3 (Cierre Irreversible)", "$1.847,2 M", "$3.779,1 M", "-$69,1 M (PÉRDIDA GRAVE)")
-    ]
-    for r_idx, r_data in enumerate(c4_data, start=1):
-        for c_idx, val in enumerate(r_data):
-            table_c4.rows[r_idx].cells[c_idx].text = val
-    format_table(table_c4)
-
+    doc.add_heading("2. ¿Cómo lo resuelve el código por dentro?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "2. Explicación Económica de las Dos Fuerzas:\n"
-        "• En Escenario Base: Conviene ampliamente (+USD 109,6 M) por dos vías: menor costo unitario (LB sale USD 25k importado vs USD 27,4k-29,6k local) "
-        "y ahorro de costos fijos de encendido y salarios de Línea A (708 M ARS del año 1, equivalentes a ~USD 500k anuales).\n"
-        "• En Escenario Devaluación: Se da vuelta por completo (-USD 115,7 M de pérdida). Producir localmente pasa a costar USD 21.800 para LB, "
-        "mucho más barato que los USD 25.000 fijos de importación.\n"
-        "• Riesgo Regulatorio en Año 3: Si el nuevo gobierno cierra aduanas y la línea fue desmantelada, la empresa pierde las ventas de los Años 3 a 5 (-USD 69,1 M). "
-        "La recomendación es NO adoptar esta estrategia en el Año 1."
+        "1. Se resuelve el modelo con la restricción obligatoria S_autonomy(t) = 1.000.\n"
+        "2. Se resuelve el modelo liberando la capacidad (S_autonomy(t) = 0).\n"
+        "3. Se resta la utilidad de ambos escenarios para hallar el costo de oportunidad: Costo Oportunidad = Z_sin - Z_con.\n"
+        "4. Se calcula el precio de indiferencia analítico aprovechando que la función objetivo es perfectamente lineal respecto al precio del contrato."
+    )
+    doc.add_heading("3. ¿Qué resultado arroja y qué significa?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_paragraph(
+        "• El contrato destruye USD 5,17 Millones de valor.\n"
+        "• ¿Por qué? No es por falta de capacidad (la Línea A opera al 75%-83%). La pérdida es de margen puro: en los Años 3, 4 y 5 fabricar un LB cuesta USD 29.538, USD 29.413 y USD 29.623. "
+        "Venderlo a USD 27.500 genera una pérdida operativa directa de más de USD 2.000 por vehículo en esos años.\n"
+        "• Precio Umbral de Indiferencia: USD 28.534 por unidad. Es el costo variable promedio ponderado de los 5 años. Por debajo de USD 28.534, el contrato destruye caja."
     )
 
-    # Consigna 5
-    doc.add_heading("Consigna 5: Evaluación del Contrato con Autonomy", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
+    # CONSIGNA 6
+    doc.add_heading("CONSIGNA 6: Costo de Playón y Transferencia de Inventarios", level=2).runs[0].font.color.rgb = COLOR_PRIMARY
+    doc.add_heading("1. ¿Cuál es la idea de negocio?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "1. Demostración Matemática del Costo de Oportunidad:\n"
-        "El contrato estipula 1.000 unidades anuales de LB a precio fijo de USD 27.500 durante los 5 años.\n"
-        "• Utilidad con contrato: USD 1.916.300.845\n"
-        "• Utilidad liberando la capacidad (sin contrato): USD 1.921.470.180\n"
-        "• Costo de Oportunidad: +USD 5.169.335 (+USD 5,17 M). El contrato destruye valor."
+        "La empresa puede fabricar de más y guardar vehículos en el playón pagando un 25% anual de su costo variable.\n"
+        "• ¿En qué casos el modelo decide transferir inventario?\n"
+        "• ¿Qué ocurre si la tasa sube al 30%?\n"
+        "• ¿A qué nivel de costo la transferencia deja de ser utilizada?"
     )
-    
-    table_c5 = doc.add_table(rows=5, cols=7)
-    c5_h = ["Concepto", "Año 1", "Año 2", "Año 3", "Año 4", "Año 5", "Total 5 Años"]
-    for i, h in enumerate(c5_h):
-        table_c5.rows[0].cells[i].text = h
-    c5_data = [
-        ("Precio Contrato (USD/u)", "$27.500", "$27.500", "$27.500", "$27.500", "$27.500", "—"),
-        ("Costo Variable LB (USD/u)", "$26.667", "$27.429", "$29.538", "$29.413", "$29.623", "—"),
-        ("Margen Unitario (USD/u)", "+$833", "+$71", "-$2.038", "-$1.913", "-$2.123", "-$5.170 / u"),
-        ("Aporte Anual (1.000 u)", "+$833.000", "+$71.000", "-$2.038.000", "-$1.913.000", "-$2.123.000", "-$5.170.000")
-    ]
-    for r_idx, r_data in enumerate(c5_data, start=1):
-        for c_idx, val in enumerate(r_data):
-            table_c5.rows[r_idx].cells[c_idx].text = val
-    format_table(table_c5)
-
+    doc.add_heading("2. ¿Cómo lo resuelve el código por dentro?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "2. Deducción del Precio de Indiferencia (USD 28.534):\n"
-        "Como la Línea A opera con holgura de capacidad (75% a 83%), el contrato no desplaza capacidad de otros modelos. Su pérdida es puramente de margen de precio. "
-        "Dado que Z es perfectamente lineal en el precio del contrato (cada dólar extra aporta 1.000 u x 5 años = USD 5.000):\n"
-        "P_indiferencia = 27.500 + (5.169.335 / 5.000) = 27.500 + 1.033,87 = USD 28.533,87 (redondeado: USD 28.534).\n"
-        "Este precio coincide exactamente con el costo variable promedio de los 5 años: (26.667 + 27.429 + 29.538 + 29.413 + 29.623) / 5 = USD 28.534.\n"
-        "Recomendación: Renegociar a mínimo USD 28.550 o indexar; si no, rechazar el contrato."
+        "1. Se evalúa la condición de arbitraje intertemporal: [CV(t) * (1 + h) / TC(t)] <= [CV(t+1) / TC(t+1)].\n"
+        "2. Se realiza un barrido paramétrico continuo de la tasa h desde 0% hasta 30% con pasos de 0,5% y 1,0%.\n"
+        "3. En cada iteración se suma el inventario total guardado para detectar el punto de anulación exacta."
     )
-
-    # Consigna 6
-    doc.add_heading("Consigna 6: Costo de Playón y Transferencia de Inventarios", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_heading("3. ¿Qué resultado arroja y qué significa?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "1. Condición Analítica de Arbitraje Intertemporal:\n"
-        "Para que convenga fabricar una unidad en el año t y guardarla para el año t+1 pagando la tasa h, se debe cumplir:\n"
-        "cv(t)·(1 + h) / e(t) <= cv(t+1) / e(t+1)   ===>   h <= [ (cv(t+1)/e(t+1)) / (cv(t)/e(t)) ] - 1\n"
-        "El incremento porcentual del costo unitario en dólares del año 2 al 3 es del +7,7%. Por ende, para tasas h superiores al 7,7%-8,8%, el costo de guardar "
-        "supera cualquier ahorro de fabricación anticipada."
+        "• Al 25% y 30%: Cero (0) inventario transferido. Subir la tasa al 30% no genera ningún impacto porque al 25% ya no convenía guardar stock.\n"
+        "• Punto de corte analítico: El inventario desaparece por completo a partir del 8,1% - 8,8% anual.\n"
+        "• Significado: Para tasas mayores al ~8,8%, el costo financiero de tener autos parados supera cualquier beneficio de anticipar producción. AutoITBA debe operar en régimen Just-in-Time."
     )
-    
-    table_c6 = doc.add_table(rows=7, cols=3)
-    c6_h = ["Tasa de Mantenimiento (h)", "Inventario Total Transferido", "Comportamiento del Modelo"]
-    for i, h in enumerate(c6_h):
-        table_c6.rows[0].cells[i].text = h
-    c6_data = [
-        ("0,0% (Almacenamiento gratis)", "91.252 unidades", "Nivelación masiva de carga entre períodos."),
-        ("1,0% a 5,0%", "61.429 a 22.546 unidades", "Traslado activo de pick-ups y livianos."),
-        ("8,0% a 8,1%", "4.302 unidades", "Solo transfiere 4.302 livianos del año 2 al 3."),
-        ("8,2% a 8,8%", "0,0 unidades", "PUNTO DE CORTE ANALÍTICO (El inventario cae a cero)."),
-        ("25,0% (Tasa Base)", "0,0 unidades", "Cero inventario (Régimen Just-in-Time estricto)."),
-        ("30,0% (Tasa Sensibilidad)", "0,0 unidades", "Cero inventario (Sin ningún impacto en la utilidad).")
-    ]
-    for r_idx, r_data in enumerate(c6_data, start=1):
-        for c_idx, val in enumerate(r_data):
-            table_c6.rows[r_idx].cells[c_idx].text = val
-    format_table(table_c6)
-
     plot_inv = os.path.join("plots", "fig3_sensibilidad_inventario.png")
     if os.path.exists(plot_inv):
         doc.add_picture(plot_inv, width=Inches(5.5))
@@ -497,38 +465,31 @@ def create_complete_word_doc(docx_path="INFORME_EJECUTIVO_AUTOITBA.docx"):
         p_cap.runs[0].font.italic = True
         p_cap.runs[0].font.size = Pt(9.5)
 
-    # Consigna 7
-    doc.add_heading("Consigna 7: Recomendación Estratégica Integral (Minimax Regret)", level=2).runs[0].font.color.rgb = COLOR_SECONDARY
+    # CONSIGNA 7
+    doc.add_heading("CONSIGNA 7: Recomendación Estratégica Integral (Minimax Regret)", level=2).runs[0].font.color.rgb = COLOR_PRIMARY
+    doc.add_heading("1. ¿Cuál es la idea de negocio?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
     doc.add_paragraph(
-        "1. Planteo Formal del Criterio Minimax Regret de Savage:\n"
-        "Se evalúa el arrepentimiento máximo de comprometer cada decisión estratégica hoy frente a los 4 estados posibles de la economía. "
-        "El arrepentimiento R(i, j) = max_k P(k, j) - P(i, j) mide cuánto dinero dejó de ganar la empresa respecto a la mejor decisión que pudo haber tomado "
-        "conociendo el escenario de antemano."
+        "Presentar una recomendación integral al directorio distinguiendo decisiones robustas vs contingentes, y definir una estrategia que minimice el arrepentimiento "
+        "en los Años 1 y 2 dejando opciones abiertas para los Años 3 a 5."
+    )
+    doc.add_heading("2. ¿Cómo lo resuelve el código por dentro?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_paragraph(
+        "1. Se formula la matriz de pagos cruzando las estrategias directivas contra los cuatro escenarios posibles (Base, Devaluación, Boom Agro y Cierre de Aduana).\n"
+        "2. Se calcula la Matriz de Arrepentimiento (Regret de Savage): R(i, j) = max_k P(k, j) - P(i, j).\n"
+        "3. Se selecciona la estrategia con el menor arrepentimiento máximo (Minimax Regret)."
+    )
+    doc.add_heading("3. ¿Qué resultado arroja y qué significa?", level=3).runs[0].font.color.rgb = COLOR_SECONDARY
+    doc.add_paragraph(
+        "• Decisiones Robustas: Línea B en doble turno los 5 años; abastecer 100% exportaciones; inventario cero.\n"
+        "• Decisiones Contingentes: Importación de China y reconversión de Línea A.\n"
+        "• Criterio Minimax Regret:\n"
+        "  - Plan Base Local (S1): Arrepentimiento Máximo = USD 109,7 M\n"
+        "  - Importar desde China (S3): Arrepentimiento Máximo = USD 115,7 M\n"
+        "  - Estrategia de Opciones Abiertas (Esperar Año 2): Arrepentimiento Máximo = USD 15,4 M (Óptimo Global)\n"
+        "• Hoja de Ruta: Operar localmente en Año 1, renegociar con Autonomy a > USD 28.550, no incurrir en costos irreversibles en Años 1 y 2, "
+        "y decidir reconversión o importación al cierre del Año 2 con el nuevo gobierno y régimen cambiario definidos."
     )
     
-    table_c7 = doc.add_table(rows=5, cols=6)
-    c7_h = ["Estrategia / Decisión", "E1: Base", "E2: Deval.", "E3: Boom", "E4: Cierre Reg.", "Arrepentimiento Máximo"]
-    for i, h in enumerate(c7_h):
-        table_c7.rows[0].cells[i].text = h
-    c7_data = [
-        ("S1: Plan Base Local", "$109,6 M", "$0,0 M", "$18,9 M", "$0,0 M", "USD 109,6 M"),
-        ("S2: Reequipar Línea A (Año 1)", "$126,0 M", "$16,2 M", "$0,0 M", "$16,4 M", "USD 126,0 M"),
-        ("S3: Importar China (Año 2)", "$0,0 M", "$115,7 M", "$0,0 M", "$69,1 M", "USD 115,7 M"),
-        ("S_E: Opciones Abiertas (Esperar)", "$15,4 M", "$0,0 M", "$0,0 M", "$0,0 M", "USD 15,4 M (ÓPTIMO)")
-    ]
-    for r_idx, r_data in enumerate(c7_data, start=1):
-        for c_idx, val in enumerate(r_data):
-            table_c7.rows[r_idx].cells[c_idx].text = val
-    format_table(table_c7)
-
-    doc.add_paragraph(
-        "2. Hoja de Ruta Táctica para los Años 1 a 5:\n"
-        "• Año 1: Operar según el Plan Base (Línea A mañana, Línea B doble turno). Renegociar con Autonomy a > USD 28.550 (o liberar capacidad). "
-        "No comprometer ni los USD 12M de obra ni los USD 8M de importación.\n"
-        "• Años 1 y 2: Seguir la demanda real del agro (umbral es +17%) y el tipo de cambio real frente a las elecciones.\n"
-        "• Cierre de Año 2: Con las variables despejadas, decidir reconversión o importación con mínimo riesgo."
-    )
-
     doc.save(docx_path)
     print(f"Complete Word document successfully updated at: {docx_path}")
 
